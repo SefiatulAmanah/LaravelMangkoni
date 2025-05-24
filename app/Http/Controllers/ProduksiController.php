@@ -63,14 +63,14 @@ class ProduksiController extends Controller
             'nama_barang' => $produk->nama_produk, // ini isi dari produk
             'jumlah' => $request->jumlah,
             'id_produk' => $request->id_produk
-        ]);            
+        ]);
         return redirect()->route('produksi.index')->with('success', 'Data berhasil disimpan!');
     }
-    
+
 
 
     public function input(Request $request){
-        
+
         // $validated = $request->validate([
         //     'hari'=> 'required',
         //     'tanggal'=> 'required',
@@ -162,9 +162,8 @@ public function import(Request $request)
         'file' => 'required|mimes:xlsx'
     ]);
 
-    
-    $excel = Excel::import(new ProduksiImport, $request->file('file'));
-    dd($excel);
+
+    Excel::import(new ProduksiImport, $request->file('file'));
 
     return redirect()->route('produksi.index')->with('success', 'Data berhasil diimport!');
 }
@@ -176,10 +175,10 @@ public function import(Request $request)
 {
     // Mencari data 'produksi' berdasarkan ID
     $produksi = Produksi::findOrFail($produksi);
-    
+
     // Menghapus data 'produksi'
     $produksi->delete();
-    
+
     // Mengalihkan kembali ke halaman index 'produksi' dengan pesan sukses
     return redirect()->route('produksi.index')->with('success', 'Data berhasil dihapus!');
 }

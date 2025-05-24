@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('produksis', function (Blueprint $table) {
             $table->id('id_produksi');
-            $table->string('hari');
             $table->date('tanggal');
             $table->unsignedBigInteger('id_produk');
             $table->foreign('id_produk')->references('id_produk')->on('produks');
