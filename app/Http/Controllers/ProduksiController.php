@@ -1,0 +1,187 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\produksi;
+use App\Models\Produk;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ProduksiImport;
+
+
+
+class ProduksiController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        {
+            $produk = produk ::all();
+            $produksi = produksi::orderBy('id_produksi','ASC')->get();
+            return view ('produksi.index', compact('produksi','produk'));
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $produk = Produk::orderBy('nama_produk', 'ASC')->get(); // Ambil semua produk
+        return view('produksi.create', compact('produk')); // kirim ke view
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        // dd($request->all());
+        $produk = Produk::find($request->id_produk);
+
+        if (!$produk) {
+            return back()->with('error', 'Produk tidak ditemukan.');
+        }
+        // Validasi input
+        $validated = $request->validate([
+            'hari' => 'required',
+            'tanggal' => 'required',
+            'id_produk' => 'required',  // Menggunakan id_produk yang dipilih di form
+            'jumlah' => 'required',
+        ], [
+            'hari.required' => 'Hari wajib diisi',
+            'tanggal.required' => 'Tanggal wajib diisi',
+            'id_produk.required' => 'Produk wajib dipilih',
+            'jumlah.required' => 'Jumlah wajib diisi',
+        ]);
+
+        Produksi::create([
+            'hari' => $request->hari,
+            'tanggal' => $request->tanggal,
+            'nama_barang' => $produk->nama_produk, // ini isi dari produk
+            'jumlah' => $request->jumlah,
+            'id_produk' => $request->id_produk
+        ]);            
+        return redirect()->route('produksi.index')->with('success', 'Data berhasil disimpan!');
+    }
+    
+
+
+    public function input(Request $request){
+        
+        // $validated = $request->validate([
+        //     'hari'=> 'required',
+        //     'tanggal'=> 'required',
+        //     'nama_barang'=> 'required',
+        //     'jumlah'=> 'required',
+        // ]);
+        // dd($validated);
+        produksi::create([
+            'hari'=> $request->input('hari'),
+            'tanggal'=> $request->input('tanggal'),
+            'id_produk'=> $request->input('nama_barang'),
+            'jumlah'=> $request->input('jumlah'),
+        ]);
+        return redirect()->route('produksi.index');
+    }
+
+    public function report()
+    {
+        $produksi = produksi::get();
+        return view ('produksi.report', compact('produksi'));
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(produksi $produksi)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request, $produksi)
+{
+    // Ambil data produk dan produksi berdasarkan id
+    $produk = Produk::all(); // Ambil semua produk
+    $produksi = Produksi::find($produksi); // Ambil data produksi berdasarkan ID yang diberikan
+
+    // Kirim data produk dan produksi ke view
+    return view('produksi.edit', compact('produksi', 'produk'));
+}
+
+
+    /**
+     * Update the specified resource in storage.
+     */
+    // public function update(Request $request, produksi $produksi)
+    // {
+    //     $produksi = $produksi::find($produksi);
+    //     // $produksi->update($request->all());
+
+    //     // return redirect()->route('produksi$produksi.index')
+    //     // dd($request);
+    //     $rules = [
+    //         'hari'=> 'required=',
+    //         'tanggal'=> 'required',
+    //         'nama_barang'=> 'required',
+    //         'jumlah'=> 'required',
+    //     ];
+    //     // dd(request());
+    //     // if ($request->nama_barang != $produksi->nama_barang) {
+    //     //     $rules['nama_barang'] = 'required';
+    //     // };
+    //     $validated = $request->validate($rules);
+    //     dd($validated);
+    //     $produksi::find($produksi->id_produksi)->update($validated);
+    //     return redirect('produksi')->with('success', 'Data Berhasil Diubah!');
+    // }
+
+    public function update(Request $request, Produksi $produksi)
+{
+    $validated = $request->validate([
+        'hari' => 'required',
+        'tanggal' => 'required|date',
+        'id_produk' => 'required|exists:produks,id_produk',
+        'jumlah' => 'required|numeric',
+    ]);
+
+    $produksi->update($validated);
+
+    return redirect()->route('produksi.index')->with('success', 'Data berhasil diubah!');
+}
+
+
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx'
+    ]);
+
+    
+    $excel = Excel::import(new ProduksiImport, $request->file('file'));
+    dd($excel);
+
+    return redirect()->route('produksi.index')->with('success', 'Data berhasil diimport!');
+}
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($produksi)
+{
+    // Mencari data 'produksi' berdasarkan ID
+    $produksi = Produksi::findOrFail($produksi);
+    
+    // Menghapus data 'produksi'
+    $produksi->delete();
+    
+    // Mengalihkan kembali ke halaman index 'produksi' dengan pesan sukses
+    return redirect()->route('produksi.index')->with('success', 'Data berhasil dihapus!');
+}
+
+}
