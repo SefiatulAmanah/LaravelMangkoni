@@ -14,6 +14,16 @@ use App\Http\Controllers\TransaksiController;
 use Illuminate\Support\Facades\Route;
 use App\Models\transaksi;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HitungProdukController; 
+
+
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    } else {
+        return redirect()->route('login');
+    }
+});
 
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.post');
@@ -52,9 +62,20 @@ Route::resource('transaksi', TbTransaksiController::class);
 Route::resource('produk', ProdukController::class);
 Route::resource('peramalan', PeramalanController::class);
 Route::get('/', [App\Http\Controllers\DashboardController::class, 'index']);
+Route::post('/hitung-produk', [HitungProdukController::class, 'hitungproduk'])->name('hitungproduk');
+Route::get('/cetak-laporan', [App\Http\Controllers\HitungProdukController::class, 'cetak'])->name('cetak.laporan');
 
 
 Route::get('report-stok', [StokController::class,'report'])->name('stok.report');
 Route::get('report-produksi', [ProduksiController::class,'report'])->name('produksi.report');
 Route::get('report-tb_transaksi', [TbTransaksiController::class,'report'])->name('transaksi.report');
+Route::get('report-riwayat', [RiwayatController::class,'report'])->name('riwayat.report');
 Route::match(['get', 'post'], '/import-produksi', [ProduksiController::class, 'import'])->name('produksi.import');
+Route::match(['get', 'post'], '/import-produk', [ProdukController::class, 'import'])->name('produk.import');
+Route::match(['get', 'post'], '/import-transaksi', [TbTransaksiController::class, 'import'])->name('transaksi.import');
+
+
+Route::get('/peramalan', [PeramalanController::class, 'index'])->name('peramalan.index');
+Route::post('/peramalan', [PeramalanController::class, 'proses'])->name('peramalan.proses');
+
+Route::get('/hitung-produk', [App\Http\Controllers\HitungProdukController::class, 'index'])->name('hitung.produk');

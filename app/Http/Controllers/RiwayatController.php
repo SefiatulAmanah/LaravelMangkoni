@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\riwayat;
 use App\Models\produk;
+use App\Models\tb_transaksi;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreriwayatRequest;
 use App\Http\Requests\UpdateriwayatRequest;
@@ -13,14 +14,47 @@ class RiwayatController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        {
-            $produk = produk ::all();
-            $riwayat = riwayat::orderBy('id_riwayat','ASC')->get();
-            return view ('riwayat.index', compact('riwayat','produk'));
+        // Ambil data transaksi beserta relasi produk (relasi sudah ada di model tb_transaksi)
+        $transaksis = tb_transaksi ::with('produk')->orderBy('tanggal', 'desc')->get();
+
+        // Ambil daftar tahun unik dari kolom tanggal transaksi
+        $tahunList = tb_transaksi::selectRaw('YEAR(tanggal) as tahun')
+                        ->distinct()
+                        ->orderBy('tahun', 'desc')
+                        ->pluck('tahun');
+
+        // Query data riwayat transaksi, dengan filter bulan & tahun jika ada
+        $query = tb_transaksi::query();
+
+        if ($request->filled('bulan')) {
+            $query->whereMonth('tanggal', $request->bulan);
         }
+        if ($request->filled('tahun')) {
+            $query->whereYear('tanggal', $request->tahun);
+        }
+
+        $transaksis = $query->with('produk')->get();
+
+        return view('riwayat.index', compact('transaksis', 'tahunList'));
     }
+public function report(Request $request)
+{
+    $query = tb_transaksi::with('produk');
+
+    if ($request->bulan) {
+        $query->whereMonth('tanggal', $request->bulan);
+    }
+
+    if ($request->tahun) {
+        $query->whereYear('tanggal', $request->tahun);
+    }
+
+    $transaksis = $query->get();
+
+    return view('riwayat.report', compact('transaksis'));
+}
 
     /**
      * Show the form for creating a new resource.

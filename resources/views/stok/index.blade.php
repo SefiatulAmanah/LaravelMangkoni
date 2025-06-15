@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="row mx-3 my-1">
+<div class="row mx-1 my-1">
     <h2 class="text-dark">DATA STOK</h2>
 </div>
 <div class="row">

@@ -2,25 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\TransaksiImport;
 use App\Models\tb_transaksi;
 use App\Models\produk;
 use App\Http\Requests\Storetb_transaksiRequest;
 use App\Http\Requests\Updatetb_transaksiRequest;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TbTransaksiController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+public function index(Request $request)
 {
     $produk = Produk::all();
-    $tb_transaksi = tb_transaksi::with('produk')->orderBy('id_transaksi', 'DESC')->get(); // <<< tambah with('produk')
+    $query = tb_transaksi::with('produk')->orderBy('id_transaksi', 'DESC');
 
-    return view('transaksi.index', compact('tb_transaksi', 'produk'));
-    
+    // Filter berdasarkan bulan dan tahun
+    if ($request->filled('bulan') && $request->filled('tahun')) {
+        $query->whereMonth('tanggal', $request->bulan)
+              ->whereYear('tanggal', $request->tahun);
+    } elseif ($request->filled('tahun')) {
+        $query->whereYear('tanggal', $request->tahun);
+    }
+
+    $tb_transaksi = $query->get();
+
+    // Ambil daftar tahun unik dari data transaksi
+    $tahunList = tb_transaksi::selectRaw('YEAR(tanggal) as tahun')
+        ->distinct()
+        ->orderBy('tahun', 'desc')
+        ->pluck('tahun');
+
+    return view('transaksi.index', compact('tb_transaksi', 'produk', 'tahunList'));
 }
+
 
 
 
@@ -114,12 +132,37 @@ class TbTransaksiController extends Controller
     return redirect()->route('transaksi.index')->with('success', 'Data berhasil diubah!');
 }
 
-public function report()
-    {
-        $tb_transaksi = tb_transaksi::get();
-        return view ('transaksi.report', compact('tb_transaksi'));
+public function report(Request $request)
+{
+    $query = tb_transaksi::with('produk');
+
+    if ($request->bulan) {
+        $query->whereMonth('tanggal', $request->bulan);
     }
 
+    if ($request->tahun) {
+        $query->whereYear('tanggal', $request->tahun);
+    }
+
+    $tb_transaksi = $query->get();
+
+    return view('transaksi.report', compact('tb_transaksi'));
+}
+
+
+    public function import(Request $request)
+    {
+        
+        $request->validate([
+            'file' => 'required|mimes:xlsx'
+        ]);
+
+
+        Excel::import(new TransaksiImport, $request->file('file'));
+
+        return redirect()->route('transaksi.index')->with('success', 'Data berhasil diimport!');
+    }
+    
     /**
      * Remove the specified resource from storage.
      */

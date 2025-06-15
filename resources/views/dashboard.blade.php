@@ -31,7 +31,36 @@
     }
     </style>
     @endif
-
+    <!-- Summary Data -->
+    <div class="mb-5 text-center">
+        <h3 class="mb-4">📊 Data Terbaru</h3>
+        <div class="row justify-content-center gx-4 gy-3">
+            <div class="col-md-4">
+                <div class="card border-primary shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <h5 class="card-title text-primary mb-3">Jumlah Produk</h5>
+                        <p class="display-4 fw-bold mb-0">{{ $jumlahProduk }}</p>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="col-md-4">
+                <div class="card border-success shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <h5 class="card-title text-success mb-3">Jumlah Data Produksi Terakhir</h5>
+                        <p class="display-4 fw-bold mb-0">{{ $jumlahProduksi }}</p>
+                    </div>
+                </div>
+            </div> -->
+            <div class="col-md-4">
+                <div class="card border-info shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <h5 class="card-title text-info mb-3">Jumlah Data Transaksi Terakhir</h5>
+                        <p class="display-4 fw-bold mb-0">{{ $jumlahTransaksi }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <h2 class="text-center mb-4">📊 Grafik Penjualan Produk Bulan Terbaru ({{ $latestPeriode }})</h2>
 
     <div class="card shadow-sm border-0 mb-5">

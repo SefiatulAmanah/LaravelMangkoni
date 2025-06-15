@@ -2,9 +2,9 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <style>
     body {
         font-family: Arial, sans-serif;
@@ -100,14 +100,27 @@
     <div class="container">
         <div class="header">
             <h1>Laporan Data Produksi</h1>
-            <p>Periode: {{ date('d F Y') }}</p> <!-- Menampilkan tanggal saat laporan dicetak -->
+            @php
+            use Carbon\Carbon;
+
+            $bulan = request('bulan');
+            $tahun = request('tahun');
+
+            if ($bulan) {
+            $namaBulan = Carbon::create(null, $bulan)->translatedFormat('F');
+            } else {
+            $namaBulan = 'Semua Bulan';
+            }
+
+            $periode = $tahun ? "$namaBulan $tahun" : ($bulan ? $namaBulan : 'Semua Periode');
+            @endphp
+            <p>Periode: {{ $periode }}</p>
         </div>
 
         <table>
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Hari</th>
                     <th>Tanggal</th>
                     <th>Nama Barang</th>
                     <th>Jumlah</th>
@@ -117,8 +130,7 @@
                 @foreach ($produksi as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $item->hari }}</td>
-                    <td>{{ $item->tanggal }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d F Y') }}</td>
                     <td>{{ optional($item->produk)->nama_produk ?? '-' }}</td>
                     <td>{{ $item->jumlah }}</td>
                 </tr>

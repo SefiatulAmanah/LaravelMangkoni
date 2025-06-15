@@ -8,21 +8,11 @@
                 <h6 class="m-0 font-weight-bold text-secondary">TAMBAH DATA TRANSAKSI</h6>
             </div>
             <div class="card-body">
-
-                <!-- {{-- Tampilkan semua pesan error --}}
-                @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif -->
-
                 <form action="{{ route('transaksi.store') }}" method="POST">
                     @csrf
                     <div class="row mx-2 my-2">
+
+                        {{-- Tanggal --}}
                         <div class="table mb-3">
                             <label for="tanggal">Tanggal</label>
                             <input type="date" name="tanggal"
@@ -33,14 +23,15 @@
                             @enderror
                         </div>
 
+                        {{-- Nama Barang --}}
                         <div class="table mb-3">
                             <label for="id_produk">Nama Barang</label>
                             <select class="form-control @error('id_produk') is-invalid @enderror" name="id_produk"
-                                id="id_produk" onchange="calculateTotal()">
-                                <option disabled selected>Pilih Produk</option>
+                                id="id_produk">
+                                <option disabled selected value="">Pilih Produk</option>
                                 @foreach ($produk as $item)
                                 <option value="{{ $item->id_produk }}" data-harga="{{ $item->harga }}"
-                                    @if(old('id_produk')==$item->id_produk) selected @endif>
+                                    {{ old('id_produk') == $item->id_produk ? 'selected' : '' }}>
                                     {{ $item->nama_produk }} (Rp {{ number_format($item->harga, 2) }})
                                 </option>
                                 @endforeach
@@ -50,26 +41,29 @@
                             @enderror
                         </div>
 
+                        {{-- Jumlah --}}
                         <div class="table mb-3">
                             <label for="jumlah">Jumlah</label>
-                            <input type="number" name="jumlah" id="jumlah"
+                            <input type="number" name="jumlah"
                                 class="form-control @error('jumlah') is-invalid @enderror" value="{{ old('jumlah') }}"
-                                placeholder="Masukkan Jumlah" onkeyup="calculateTotal()">
+                                placeholder="Masukkan jumlah">
                             @error('jumlah')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        {{-- Total --}}
                         <div class="table mb-3">
                             <label for="total">Total</label>
                             <p id="totalDisplay" class="form-control-static">Rp 0</p>
-                            <input type="hidden" name="total" id="totalInput" value="0">
+                            <input type="hidden" name="total" id="totalInput" value="{{ old('total', 0) }}">
                         </div>
 
-                        <div class="table mb-3">
-                            <button type="submit" class="btn btn-dark" name="save">Simpan</button>
-                            <a href="{{ route('transaksi.index') }}" class="btn btn-dark">Kembali</a>
-                        </div>
+                    </div>
+
+                    <div class="table">
+                        <button type="submit" class="btn btn-dark" name="save">Simpan</button>
+                        <a href="{{ route('transaksi.index') }}" class="btn btn-dark">Kembali</a>
                     </div>
                 </form>
             </div>
@@ -78,22 +72,33 @@
 </div>
 
 <script>
+// Fungsi untuk menghitung total
 function calculateTotal() {
     var jumlah = document.getElementById('jumlah').value;
-    var selectedOption = document.querySelector("#id_produk option:checked");
-    var harga = selectedOption ? selectedOption.getAttribute('data-harga') : 0;
-
+    var produkHarga = null;
     var totalDisplay = document.getElementById('totalDisplay');
     var totalInput = document.getElementById('totalInput');
 
-    if (!isNaN(jumlah) && jumlah !== '' && harga) {
-        var total = jumlah * parseFloat(harga);
-        totalDisplay.textContent = "Rp " + total.toLocaleString('id-ID');
+    var selectedOption = document.querySelector("#id_produk option:checked");
+    if (selectedOption) {
+        produkHarga = selectedOption.getAttribute('data-harga');
+    }
+
+    if (!isNaN(jumlah) && jumlah != '' && produkHarga !== null) {
+        var total = jumlah * produkHarga;
+        totalDisplay.textContent = "Rp " + total.toLocaleString();
         totalInput.value = total;
     } else {
         totalDisplay.textContent = "Rp 0";
         totalInput.value = 0;
     }
 }
+
+// Event listener untuk input jumlah dan perubahan produk
+document.getElementById('jumlah').addEventListener('input', calculateTotal);
+document.getElementById('id_produk').addEventListener('change', calculateTotal);
+
+// Panggil sekali saat load untuk inisialisasi total
+window.onload = calculateTotal;
 </script>
 @endsection

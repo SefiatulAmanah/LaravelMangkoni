@@ -7,7 +7,7 @@ use App\Models\Produk;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProduksiImport;
-
+use Carbon\Carbon;
 
 
 class ProduksiController extends Controller
@@ -15,14 +15,31 @@ class ProduksiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        {
-            $produk = produk ::all();
-            $produksi = produksi::orderBy('id_produksi','ASC')->get();
-            return view ('produksi.index', compact('produksi','produk'));
-        }
+public function index(Request $request)
+{
+    $produk = Produk::all();
+    $query = Produksi::with('produk');
+
+    // Filter bulan dan tahun jika dipilih
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggal', $request->bulan);
     }
+
+    if ($request->filled('tahun')) {
+        $query->whereYear('tanggal', $request->tahun);
+    }
+
+    $produksi = $query->orderBy('tanggal', 'desc')->get();
+
+    // Ambil daftar tahun unik dari tabel produksi
+    $tahunList = Produksi::selectRaw('YEAR(tanggal) as tahun')
+        ->distinct()
+        ->orderBy('tahun', 'desc')
+        ->pluck('tahun');
+
+    return view('produksi.index', compact('produksi', 'tahunList'));
+}
+
 
     /**
      * Show the form for creating a new resource.
@@ -46,19 +63,16 @@ class ProduksiController extends Controller
         }
         // Validasi input
         $validated = $request->validate([
-            'hari' => 'required',
             'tanggal' => 'required',
             'id_produk' => 'required',  // Menggunakan id_produk yang dipilih di form
             'jumlah' => 'required',
         ], [
-            'hari.required' => 'Hari wajib diisi',
             'tanggal.required' => 'Tanggal wajib diisi',
             'id_produk.required' => 'Produk wajib dipilih',
             'jumlah.required' => 'Jumlah wajib diisi',
         ]);
 
         Produksi::create([
-            'hari' => $request->hari,
             'tanggal' => $request->tanggal,
             'nama_barang' => $produk->nama_produk, // ini isi dari produk
             'jumlah' => $request->jumlah,
@@ -79,7 +93,6 @@ class ProduksiController extends Controller
         // ]);
         // dd($validated);
         produksi::create([
-            'hari'=> $request->input('hari'),
             'tanggal'=> $request->input('tanggal'),
             'id_produk'=> $request->input('nama_barang'),
             'jumlah'=> $request->input('jumlah'),
@@ -87,11 +100,21 @@ class ProduksiController extends Controller
         return redirect()->route('produksi.index');
     }
 
-    public function report()
-    {
-        $produksi = produksi::get();
-        return view ('produksi.report', compact('produksi'));
+public function report(Request $request)
+{
+    $query = Produksi::with('produk');
+
+    if ($request->filled('bulan')) {
+        $query->whereMonth('tanggal', $request->bulan);
     }
+    if ($request->filled('tahun')) {
+        $query->whereYear('tanggal', $request->tahun);
+    }
+
+    $produksi = $query->orderBy('tanggal', 'desc')->get();
+
+    return view('produksi.report', compact('produksi'));
+}
 
     /**
      * Display the specified resource.
@@ -144,7 +167,6 @@ class ProduksiController extends Controller
     public function update(Request $request, Produksi $produksi)
 {
     $validated = $request->validate([
-        'hari' => 'required',
         'tanggal' => 'required|date',
         'id_produk' => 'required|exists:produks,id_produk',
         'jumlah' => 'required|numeric',

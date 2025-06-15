@@ -27,7 +27,7 @@
 }
 </style>
 
-<div class="row mx-2 my-1">
+<div class="row mx-1 my-1">
     <h2 class="text-dark">DATA RETUR</h2>
 </div>
 

@@ -99,7 +99,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Laporan Data Transaksi</h1>
+            <h1>Laporan Data Riwayat</h1>
             @php
             use Carbon\Carbon;
 
@@ -130,7 +130,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($tb_transaksi as $item)
+                @foreach ($transaksis as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d F Y') }}</td>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Produk;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ProdukImport;
 
 class ProdukController extends Controller
 {
@@ -62,24 +64,33 @@ class ProdukController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Produk $produk)
-{
-    // Validasi data
-    $validated = $request->validate([
-        'nama_produk' => 'required|string',
-        'harga' => 'required|numeric',
-    ]);
+    {
+        // Validasi data
+        $validated = $request->validate([
+            'nama_produk' => 'required|string',
+            'harga' => 'required|numeric',
+        ]);
 
-    // Debug: cek data yang diterima
-    // dd($validated);
+        // Debug: cek data yang diterima
+        // dd($validated);
 
-    // Update produk
-    $produk->update($validated);
+        // Update produk
+        $produk->update($validated);
 
-    return redirect()->route('produk.index')->with('success', 'Data Berhasil Diubah!');
-}
+        return redirect()->route('produk.index')->with('success', 'Data Berhasil Diubah!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx'
+        ]);
 
 
-    
+        Excel::import(new ProdukImport, $request->file('file'));
+
+        return redirect()->route('produk.index')->with('success', 'Data berhasil diimport!');
+    }
 
     /**
      * Remove the specified resource from storage.
